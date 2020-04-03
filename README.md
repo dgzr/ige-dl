@@ -2,7 +2,7 @@
 
 ```
 $ pkg install python
-$ python -m pop install requests
+$ python -m pip install requests
 $ pkg install git
 $ git clone https://github.com/Ezz-Kun/ige-dl
 $ cd ige-dl
