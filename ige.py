@@ -48,6 +48,7 @@ class boring:
 			progres.close()
 			print('%s[%s!%s] Oke File Saved In %s: %s%s'%(p,h,p,ab,p,path))
 			input('%s[%s?%s] Back'%(p,h,p))
+			self.menu()
 		elif chos == 2:
 			url = input('%s[%s?%s] Url Post %s:%s '%(p,h,p,ab,p))
 			hem = self.req.get(url).text
