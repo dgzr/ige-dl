@@ -10,4 +10,4 @@ $ python ige.py
 ```
 
 #### Pict
-![](https://i.ibb.co/jyjJQrR/Screenshot-20200403-163629-picsay.png)
+![](https://i.ibb.co/zrQ6P9j/Screenshot-20200415-133456-picsay.png)
