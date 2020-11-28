@@ -1,13 +1,16 @@
-![](https://img.shields.io/badge/python-3.8.x-blue)  ![](https://img.shields.io/badge/Coder-Ezz--Kun-green)   ![](https://img.shields.io/badge/Instagram-Downloader-orange)  ![](https://img.shields.io/badge/%40copyright-2020-orange)
+![](https://img.shields.io/badge/python-3.8.x-blue)
 
+##### sample command
 ```
-$ pkg install python
-$ python -m pip install requests
-$ pkg install git
-$ git clone https://github.com/Ezz-Kun/ige-dl
-$ cd ige-dl
-$ python ige.py
+usage: ints-dl [-h] [-f] [-u] [-p] [-i]
+
+optional arguments:
+  -h, --help    show this help message and exit
+  -f , --file   download media using list file url
+  -u , --url    single url post to download
+  -p , --path   path to save media
+  -i , --info   tools information
+
+Example : ./ints-dl -u https://www.instagram.com/<id> -p /sdcard/
+          ./ints-dl -f url.txt -p /sdcard/
 ```
----------
-#### Pict
-![](https://i.ibb.co/pJ4T5p7/Screenshot-20200417-164824-picsay.png)
