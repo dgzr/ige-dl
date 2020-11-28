@@ -1,4 +1,4 @@
-![](https://img.shields.io/badge/python-3.8.x-blue)
+![](https://img.shields.io/badge/python-3.9.x-blue)
 
 ##### sample command
 ```
