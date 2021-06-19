@@ -1,0 +1,168 @@
+#!/usr/bin/python
+"""
+Author : Aditia © 2020
+Date : Wed, 25 Nov 2020, 22:10:24 WIB
+update dari versi yang lama.
+Contact -> https://t.me/aditia_dtz
+"""
+import argparse
+import re
+import requests
+import json
+import os
+import tqdm
+
+banner = """
+             \x1b[97m╦┌┐┌┌┬┐┌─┐  ╔╦╗┬  
+             ║│││ │ └─┐───║║│  
+             ╩┘└┘ ┴ └─┘  ═╩╝┴─┘
+         \x1b[47;30;1mInstagram|Media-Downloader\x1b[0m
+"""
+session = requests.Session()
+session.headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"
+base_url = "https://www.instagram.com/p/{}/"
+defpath = "/storage/emulated/0/Instagram-Media"
+clear = (lambda : os.system("clear"))
+
+if not os.path.exists(defpath):
+	os.makedirs(defpath)
+
+def GraphImage(idpost):
+	images = []
+	try:
+		pages = session.get(base_url.format(idpost), params={"__a":1})
+		if (dat := pages.json()):
+			temp = dat["graphql"]["shortcode_media"]
+			if not temp.get("edge_sidecar_to_children"):
+				images.append(
+					temp["display_resources"][-1]["src"])
+			else:
+				for tempest in temp["edge_sidecar_to_children"]["edges"]:
+					if(tempest["node"]["__typename"] == "GraphImage"):
+						images.append(
+							tempest["node"]["display_resources"][-1]["src"])
+			return {
+				"image": images,
+				"name":temp["owner"]["full_name"],
+				"username":"@"+temp["owner"]["username"],
+				"description":temp["edge_media_to_caption"]["edges"][0]["node"]["text"]}
+		else:
+			return False
+	except:
+		return False
+
+def GraphVideo(idpost):
+	videos = []
+	thumbnail = []
+	try:
+		pages = session.get(base_url.format(idpost), params={"__a":1})
+		if (dat := pages.json()):
+			temp = dat["graphql"]["shortcode_media"]
+			if not temp.get("edge_sidecar_to_children"):
+				videos.append(
+					temp["video_url"])
+				thumbnail.append(
+					temp["thumbnail_src"])
+			else:
+				for tempest in temp["edge_sidecar_to_children"]["edges"]:
+					if(tempest["node"]["__typename"] == "GraphVideo"):
+						videos.append(
+							tempest["node"]["video_url"])
+						thumbnail.append(
+							tempest["node"]["display_resources"][-1]["src"])
+			return {
+				"video": videos,
+				"thumbnail": thumbnail,
+				"name":temp["owner"]["full_name"],
+				"username":"@"+temp["owner"]["username"],
+				"description": temp["edge_media_to_caption"]["edges"][0]["node"]["text"]}
+		else:
+			return False
+	except:
+		return False
+
+def GraphIgtv(idpost):
+	try:
+		pages = session.get(f"https://www.instagram.com/tv/{idpost}").text
+		if (sharedData := re.search(r"window.\_sharedData\s+=\s+([^>]+);",pages)):
+			data = json.loads(sharedData.group(1))
+			key = data['entry_data']['PostPage'][0]['graphql']['shortcode_media']
+			return {
+				"igtv": [key['video_url']],
+				"thumbnail": key['thumbnail_src'],
+				"title": key['title'],
+				"name": key['owner']['full_name'],
+				"username": f"@{key['owner']['username']}",
+				"description": key['edge_media_to_caption']['edges'][0]['node']['text']
+			}
+		else:
+			return False
+	except:
+		return False
+
+def download(url, name=None):
+	defpath = "/storage/emulated/0/Instagram-Media"
+	if not os.path.exists(defpath):
+		os.makedirs(defpath)
+	try:
+		content = requests.get(url, stream=True)
+		prog = tqdm.tqdm(total=int(
+				content.headers.get('content-length',0)),unit='B',unit_scale=True)
+		if (filename := re.search(r"([0-9]+_[0-9].+(?:jpg|mp4))",url)):
+			filename = f"{name}.mp4" if name is not None else filename.group()
+			with open(f"{defpath}/{filename}", 'wb') as f:
+				for progs in content.iter_content(1024):
+					prog.update(len(progs))
+					f.write(progs)
+			prog.close()
+			print(f" Saved ,{defpath}/{filename}")
+	except Exception as e:
+		exit(str(e))
+
+def Main():
+	media_format = {"image": GraphImage ,"video": GraphVideo,"thumbnail": GraphVideo, "igtv": GraphIgtv}
+	_arg = argparse.ArgumentParser(
+		formatter_class=argparse.RawTextHelpFormatter,
+		description=f'{banner}')
+	_arg.add_argument('-f','--file',help='download media using list file url',metavar='')
+	_arg.add_argument('-u','--url',help='single url post to download',metavar='')
+	_arg.add_argument('-t','--type',help='type media -> image, video, thumbnail, igtv',metavar='')
+	_arg.add_argument('-i','--info',help='tools information',metavar='')
+	parser = _arg.parse_args()
+	parser_url = []
+	parser_type = parser.type.lower() if parser.type is not None else ''
+	if parser.file and parser.type:
+		if os.path.exists(parser.file):
+			parser_url = open(parser.file).read().strip().splitlines()
+		else:
+			raise FileNotFoundError(f' -> file {parser.file} not found !')
+	if parser.url and parser.type:
+		parser_url.insert(0, parser.url)
+	if len(parser_url) != 0 and parser_type in list(media_format.keys()):
+		print(' -> wait ..for getting media .')
+		for url in parser_url:
+			if (valid_url := re.match(r"http[s]?:\/\/(?:www\.instagram\.com\/(?:p|tv)\/)(?P<id>[^>]+)\/",url)):
+				idpost = valid_url.group('id')
+				if (result := media_format[parser_type](idpost)):
+					clear()
+					print(banner)
+					print(f" owner -> {result['name']}/{result['username']}\n"
+						f" {len(result[parser_type])} {parser_type}s Retrevied..!\n"
+						f" desc -> {result['description']}\n"
+						f" title -> {result.get('title')}\n")
+					for dl, dls in enumerate(result[parser_type],1):
+						print(f" downloading ({dl}) of ({len(result[parser.type])}) url!!")
+						download(dls, result.get('title'))
+				else:
+					print(f' -> skip {idpost} errors when getting media.,')
+					continue
+			else:
+				print(f' -> skip {url} this not url instagram post!')
+				continue
+	else:
+		_arg.print_help()
+		print(f'format error: "{parser.type}" not valid media format .!')
+
+if __name__=="__main__":
+#	print(banner)
+	Main()
